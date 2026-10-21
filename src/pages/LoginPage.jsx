@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Icon from '../components/Icon';
 
 export default function LoginPage() {
-  const { signIn, signUp, enterDemo, loading } = useAuth();
+  const { signIn, signUp, loading } = useAuth();
   const navigate = useNavigate();
-  const [isSignup, setIsSignup] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [isSignup, setIsSignup] = useState(searchParams.get('mode') === 'signup');
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '', department: '', studentId: '' });
 
@@ -16,18 +17,20 @@ export default function LoginPage() {
     event.preventDefault();
     setError('');
     try {
-      if (isSignup) await signUp(form);
-      else await signIn(form);
-      navigate('/app');
+      if (isSignup) {
+        await signUp(form);
+        navigate('/verify-email?email=' + encodeURIComponent(form.email));
+      } else {
+        await signIn(form);
+        navigate('/app');
+      }
     } catch (err) {
+      if (err.code === 'EMAIL_NOT_VERIFIED') {
+        navigate('/verify-email?email=' + encodeURIComponent(form.email));
+        return;
+      }
       setError(err.message || 'Could not sign in. Please try again.');
     }
-  }
-
-  async function demo(role) {
-    setError('');
-    await enterDemo(role);
-    navigate('/app');
   }
 
   return (
@@ -52,15 +55,7 @@ export default function LoginPage() {
           <Link to="/" className="auth-mobile-brand"><span className="brand-mark"><Icon name="compass" size={20} /></span><span className="brand-word">mycampus<span>.</span></span></Link>
           <div className="auth-heading"><span className="auth-heading-kicker">{isSignup ? 'GET STARTED' : 'WELCOME BACK'}</span><h2>{isSignup ? 'Join your campus.' : 'Come on in.'}</h2><p>{isSignup ? 'Create your student account to get connected.' : 'Sign in to find what is happening around you.'}</p></div>
 
-          <div className="demo-access">
-            <div className="demo-access-head"><span className="demo-spark"><Icon name="sparkle" size={15} /></span><div><strong>Just exploring?</strong><small>Jump into a ready-to-go demo.</small></div></div>
-            <div className="demo-buttons">
-              <button className="demo-button" onClick={() => demo('student')} disabled={loading}><span className="demo-avatar demo-avatar-student">A</span><span><strong>Student view</strong><small>Explore campus life</small></span><Icon name="arrow" size={16} /></button>
-              <button className="demo-button" onClick={() => demo('admin')} disabled={loading}><span className="demo-avatar demo-avatar-admin"><Icon name="shield" size={17} /></span><span><strong>Admin view</strong><small>Manage campus posts</small></span><Icon name="arrow" size={16} /></button>
-            </div>
-          </div>
-
-          <div className="auth-divider"><span>or use your account</span></div>
+          {searchParams.get('reset') === 'success' && <p className="form-success">Your password has been updated. Sign in with your new password.</p>}
           <form className="auth-form" onSubmit={submit}>
             {isSignup && <label className="field-label">Your name<input required autoComplete="name" value={form.name} onChange={(event) => update('name', event.target.value)} placeholder="e.g. Sam Taylor" /></label>}
             <label className="field-label">Campus email<input required type="email" autoComplete="email" value={form.email} onChange={(event) => update('email', event.target.value)} placeholder="you@college.edu" /></label>
@@ -72,6 +67,7 @@ export default function LoginPage() {
             {error && <p className="form-error">{error}</p>}
             <button className="button button-primary auth-submit" disabled={loading}>{loading ? 'One moment…' : isSignup ? 'Create account' : 'Sign in'} <Icon name="arrow" size={16} /></button>
           </form>
+          {!isSignup && <p className="auth-forgot"><Link to="/forgot-password">Forgot password?</Link></p>}
           <p className="auth-switch">{isSignup ? 'Already a member?' : 'New to MyCampus?'} <button onClick={() => { setIsSignup(!isSignup); setError(''); }}>{isSignup ? 'Sign in' : 'Create an account'}</button></p>
           <div className="auth-safe"><Icon name="shield" size={15} /> A friendly, student-first community space.</div>
         </div>

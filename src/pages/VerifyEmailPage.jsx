@@ -1,0 +1,31 @@
+import { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Icon from '../components/Icon';
+
+export default function VerifyEmailPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { verifyEmail, resendVerificationCode, loading } = useAuth();
+  const [email, setEmail] = useState(searchParams.get('email') || '');
+  const [code, setCode] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function submit(event) {
+    event.preventDefault();
+    setError(''); setMessage('');
+    try {
+      await verifyEmail(email, code);
+      navigate('/app', { replace: true });
+    } catch (err) { setError(err.message || 'Could not verify this email.'); }
+  }
+
+  async function resend() {
+    setError(''); setMessage('');
+    try { const result = await resendVerificationCode(email); setMessage(result.message); }
+    catch (err) { setError(err.message || 'Could not send a new code.'); }
+  }
+
+  return <main className="simple-auth-page"><section className="simple-auth-card"><Link to="/" className="brand-lockup"><span className="brand-mark"><Icon name="compass" size={20} /></span><span className="brand-word">mycampus<span>.</span></span></Link><span className="section-eyebrow">ONE LAST STEP</span><h1>Check your <em>inbox.</em></h1><p>Enter the six-digit code we sent to your campus email.</p><form className="form-stack" onSubmit={submit}><label className="field-label">Campus email<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label><label className="field-label">Verification code<input required inputMode="numeric" autoComplete="one-time-code" maxLength="6" pattern="[0-9]{6}" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit code" /></label>{error && <p className="form-error">{error}</p>}{message && <p className="form-success">{message}</p>}<button className="button button-primary" disabled={loading}>{loading ? 'Checking…' : 'Verify email'} <Icon name="arrow" size={16} /></button></form><button className="text-action" onClick={resend}>Send a new code</button><p className="simple-auth-foot"><Link to="/login">Back to sign in</Link></p></section></main>;
+}

@@ -15,7 +15,7 @@ const navigation = [
 const pageNames = {
   '/app': 'Overview', '/app/events': 'Campus events', '/app/resources': 'Study resources',
   '/app/lost-found': 'Lost & found', '/app/opportunities': 'Opportunities',
-  '/app/notices': 'Campus notices', '/app/profile': 'My profile', '/app/search': 'Search MyCampus'
+  '/app/notices': 'Campus notices', '/app/moderation': 'Post moderation', '/app/profile': 'My profile', '/app/search': 'Search MyCampus'
 };
 
 export default function AppLayout() {
@@ -25,6 +25,9 @@ export default function AppLayout() {
   const [query, setQuery] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
   const heading = pageNames[location.pathname] || 'MyCampus';
+  const visibleNavigation = user?.role === 'admin'
+    ? [...navigation, { label: 'Post moderation', to: '/app/moderation', icon: 'shield', group: 'ADMINISTRATION' }]
+    : navigation;
 
   function submitSearch(event) {
     event.preventDefault();
@@ -45,7 +48,7 @@ export default function AppLayout() {
           <span className="switch-chevron">⌄</span>
         </div>
         <nav className="side-navigation" aria-label="Main navigation">
-          {navigation.map((item, index) => (
+          {visibleNavigation.map((item, index) => (
             <div key={item.to}>
               {item.group && <p className={'nav-group-label ' + (index ? 'nav-group-spaced' : '')}>{item.group}</p>}
               <NavLink to={item.to} end={item.end} onClick={() => setMobileOpen(false)} className={({ isActive }) => 'nav-link ' + (isActive ? 'nav-link-active' : '')}>

@@ -3,9 +3,10 @@ import { useAuth } from './AuthContext';
 import { campusService } from '../services/campusService';
 
 const WorkspaceContext = createContext(null);
+const getId = (value) => String(value?.id || value?._id || value || '');
 
 export function WorkspaceProvider({ children }) {
-  const { user } = useAuth();
+  const { user, authReady } = useAuth();
   const [events, setEvents] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,8 +23,8 @@ export function WorkspaceProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (authReady && user) refresh().catch((err) => console.error('Could not load MyCampus data:', err));
+  }, [refresh, authReady, user]);
 
   async function addEvent(values) {
     const event = await campusService.createEvent(values, user);
@@ -31,32 +32,43 @@ export function WorkspaceProvider({ children }) {
     return event;
   }
 
+  async function removeEvent(event) {
+    await campusService.deleteEvent(event._id);
+    setEvents((current) => current.filter((item) => item._id !== event._id));
+  }
+
   async function registerEvent(event) {
-    const result = await campusService.registerForEvent(event, user);
-    if (result.event) {
-      setEvents((current) => current.map((item) => item._id === event._id ? result.event : item));
-    } else {
-      setEvents((current) => current.map((item) => {
-        if (item._id !== event._id) return item;
-        const currentIds = (item.attendees || []).map((person) => person?.id || person?._id || person);
-        const nextIds = result.registered
-          ? [...currentIds, user?.id]
-          : currentIds.filter((id) => id !== user?.id);
-        return { ...item, attendees: nextIds };
-      }));
+    let result;
+    try {
+      result = await campusService.registerForEvent(event, user);
+    } catch (err) {
+      if (err.data?.attendeeCount !== undefined) {
+        setEvents((current) => current.map((item) => item._id === event._id
+          ? { ...item, attendeeCount: err.data.attendeeCount }
+          : item));
+      }
+      throw err;
     }
+    setEvents((current) => current.map((item) => {
+      if (item._id !== event._id) return item;
+      if (result.event) return result.event;
+      const currentIds = (item.attendees || []).map(getId);
+      const userId = getId(user);
+      const nextIds = result.registered
+        ? [...currentIds.filter((id) => id !== userId), userId]
+        : currentIds.filter((id) => id !== userId);
+      return { ...item, attendees: nextIds, attendeeCount: result.attendeeCount ?? nextIds.length };
+    }));
     return result;
   }
 
   async function addPost(values) {
     const post = await campusService.createPost(values, user);
-    setPosts((current) => [post, ...current]);
+    if (post.status === 'approved' || !post.status) setPosts((current) => [post, ...current]);
     return post;
   }
 
-  const value = useMemo(() => ({
-    events, posts, loading, refresh, addEvent, registerEvent, addPost
-  }), [events, posts, loading, user]);
+  const value = useMemo(() => ({ events, posts, loading, refresh, addEvent, removeEvent, registerEvent, addPost }), [events, posts, loading, user]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }

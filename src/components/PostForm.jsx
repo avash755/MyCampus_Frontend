@@ -14,6 +14,7 @@ export default function PostForm({ category, onClose }) {
   const { addPost } = useWorkspace();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(null);
   const [form, setForm] = useState({ title: '', body: '', category, department: '', tags: '', link: '', location: '', contact: '', deadline: '' });
   const copy = categoryCopy[category] || categoryCopy.resource;
 
@@ -29,8 +30,9 @@ export default function PostForm({ category, onClose }) {
       tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean)
     };
     try {
-      await addPost(payload);
-      onClose();
+      const post = await addPost(payload);
+      if (post.status === 'pending') setSubmitted('Your post is in the moderation queue. It will appear on the board after an administrator approves it.');
+      else setSubmitted('Your post has been published.');
     } catch (err) {
       setError(err.message || 'Could not create this post.');
     } finally {
@@ -39,8 +41,8 @@ export default function PostForm({ category, onClose }) {
   }
 
   return (
-    <Modal title={copy[0]} subtitle={copy[1]} onClose={onClose}>
-      <form className="form-stack" onSubmit={submit}>
+    <Modal title={submitted ? 'Thanks for sharing' : copy[0]} subtitle={submitted ? '' : copy[1]} onClose={onClose}>
+      {submitted ? <div className="post-submitted"><span className="empty-icon"><Icon name="check" /></span><p>{submitted}</p><button className="button button-primary" onClick={onClose}>Done</button></div> : <form className="form-stack" onSubmit={submit}>
         <label className="field-label">Title<input required maxLength="140" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="Give your post a clear title" /></label>
         <label className="field-label">Description<textarea required rows="4" maxLength="3000" value={form.body} onChange={(event) => update('body', event.target.value)} placeholder="Add the details people need to know" /></label>
         {category !== 'lost-found' && <label className="field-label">Department or audience<input value={form.department} onChange={(event) => update('department', event.target.value)} placeholder="e.g. All departments" /></label>}
@@ -60,8 +62,8 @@ export default function PostForm({ category, onClose }) {
         </div>}
         {category === 'notice' && <label className="field-label">Link <span className="field-hint">(optional)</span><input type="url" value={form.link} onChange={(event) => update('link', event.target.value)} placeholder="https://" /></label>}
         {error && <p className="form-error">{error}</p>}
-        <div className="form-actions"><button type="button" className="button button-quiet" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? 'Posting…' : <><Icon name="send" size={15} /> Publish post</>}</button></div>
-      </form>
+        <div className="form-actions"><button type="button" className="button button-quiet" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? 'Posting…' : <><Icon name="send" size={15} /> Submit post</>}</button></div>
+      </form>}
     </Modal>
   );
 }

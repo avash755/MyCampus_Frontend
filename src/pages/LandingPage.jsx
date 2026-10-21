@@ -15,7 +15,7 @@ export default function LandingPage() {
       <header className="landing-nav">
         <Link to="/" className="brand-lockup"><span className="brand-mark"><Icon name="compass" size={21} /></span><span className="brand-word">mycampus<span>.</span></span></Link>
         <nav className="landing-nav-links"><a href="#what-is-mycampus">What is MyCampus</a><a href="#features">Features</a></nav>
-        <div className="landing-nav-actions"><Link className="landing-signin" to="/login">Sign in</Link><button className="button button-primary" onClick={() => navigate('/login')}>Explore MyCampus <Icon name="arrow" size={16} /></button></div>
+        <div className="landing-nav-actions"><Link className="landing-signin" to="/login">Sign in</Link><button className="button button-primary" onClick={() => navigate('/preview')}>Explore MyCampus <Icon name="arrow" size={16} /></button></div>
       </header>
 
       <main>
@@ -24,7 +24,7 @@ export default function LandingPage() {
             <div className="eyebrow"><span className="eyebrow-dot" /> YOUR CAMPUS, A LITTLE CLOSER</div>
             <h1>Campus life,<br /><em>all together.</em></h1>
             <p>Events, helpful resources, campus updates, and opportunities—thoughtfully brought together in one friendly place.</p>
-            <div className="hero-actions"><button className="button button-primary button-large" onClick={() => navigate('/login')}>Take a look around <Icon name="arrow" size={17} /></button><a className="hero-text-link" href="#features"><span className="play-circle">↓</span> See what you can do</a></div>
+            <div className="hero-actions"><button className="button button-primary button-large" onClick={() => navigate('/preview')}>Take a look around <Icon name="arrow" size={17} /></button><a className="hero-text-link" href="#features"><span className="play-circle">↓</span> See what you can do</a></div>
             <div className="hero-proof"><div className="avatar-stack"><span>A</span><span>M</span><span>J</span><span>+2</span></div><div><strong>A home for campus life</strong><small>Made to bring useful things closer</small></div></div>
           </div>
 
@@ -52,11 +52,11 @@ export default function LandingPage() {
         <section className="landing-features" id="features">
           <div className="section-heading"><div className="eyebrow"><span className="eyebrow-dot" /> A BETTER CAMPUS DAY</div><h2>Find a little more<br /><em>of what matters.</em></h2><p>Campus is full of good things. MyCampus makes it easier to find them.</p></div>
           <div className="feature-grid">{features.map((feature, index) => (
-            <article className="feature-card" key={feature.title}><span className={'feature-icon ' + feature.tone}><Icon name={feature.icon} size={20} /></span><span className="feature-number">0{index + 1}</span><h3>{feature.title}</h3><p>{feature.text}</p><button className="feature-arrow" aria-label={'Explore ' + feature.title} onClick={() => navigate('/login')}><Icon name="arrow" size={17} /></button></article>
+            <article className="feature-card" key={feature.title}><span className={'feature-icon ' + feature.tone}><Icon name={feature.icon} size={20} /></span><span className="feature-number">0{index + 1}</span><h3>{feature.title}</h3><p>{feature.text}</p><button className="feature-arrow" aria-label={'Explore ' + feature.title} onClick={() => navigate('/preview')}><Icon name="arrow" size={17} /></button></article>
           ))}</div>
         </section>
 
-        <section className="landing-cta"><div className="cta-orbit cta-orbit-one" /><div className="cta-orbit cta-orbit-two" /><div className="cta-content"><span className="cta-star">✳</span><h2>There is a place<br />for you here.</h2><p>Take a look around your campus community.</p><button className="button button-light button-large" onClick={() => navigate('/login')}>Come on in <Icon name="arrow" size={17} /></button></div><div className="cta-aside"><span>MYCAMPUS</span><strong>Made for students.<br />Built for belonging.</strong><small>Campus life, together.</small></div></section>
+        <section className="landing-cta"><div className="cta-orbit cta-orbit-one" /><div className="cta-orbit cta-orbit-two" /><div className="cta-content"><span className="cta-star">✳</span><h2>There is a place<br />for you here.</h2><p>Take a look around your campus community.</p><button className="button button-light button-large" onClick={() => navigate('/preview')}>Take a look around <Icon name="arrow" size={17} /></button></div><div className="cta-aside"><span>MYCAMPUS</span><strong>Made for students.<br />Built for belonging.</strong><small>Campus life, together.</small></div></section>
       </main>
 
       <footer className="landing-footer"><Link to="/" className="brand-lockup"><span className="brand-mark"><Icon name="compass" size={18} /></span><span className="brand-word">mycampus<span>.</span></span></Link><span>Made with care for campus life.</span><a href="#what-is-mycampus">Back to top ↑</a></footer>

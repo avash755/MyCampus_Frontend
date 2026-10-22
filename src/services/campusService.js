@@ -27,13 +27,22 @@ async function request(path, options = {}) {
       throw new Error('The server took too long to respond. Your account may have been created; try requesting a verification code again.');
     }
     if (err instanceof TypeError) {
-      throw new Error('Could not reach the MyCampus server. It may be waking up; please try again shortly.');
+      throw new Error(import.meta.env.PROD
+        ? 'Could not reach the MyCampus API. Check that this Vercel deployment uses the MyCampus client and forwards /api to the Render backend.'
+        : 'Could not reach the MyCampus API. Check that the server is running at ' + API_URL + '.');
     }
     throw err;
   }
-  const data = await response.json().catch(() => ({}));
+  const contentType = response.headers.get('content-type') || '';
+  const responseBody = await response.text();
+  let data = {};
+  try { data = responseBody ? JSON.parse(responseBody) : {}; }
+  catch { data = { raw: responseBody }; }
+  if (contentType.includes('text/html') || responseBody.includes('DEPLOYMENT_NOT_FOUND')) {
+    throw new Error('This Vercel deployment is not forwarding /api requests to MyCampus. Check that the MyCampus client is deployed and its /api rewrite is active.');
+  }
   if (!response.ok) {
-    const error = new Error(data.message || 'The request could not be completed.');
+    const error = new Error(data.message || 'The MyCampus API returned an error. Please try again.');
     error.code = data.code;
     error.status = response.status;
     error.data = data;

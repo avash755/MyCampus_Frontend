@@ -7,6 +7,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [registrationStatus, setRegistrationStatus] = useState('idle');
+  const [registrationError, setRegistrationError] = useState('');
   const sessionRevision = useRef(0);
 
   function saveSession(nextUser) {
@@ -54,10 +56,20 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp(values) {
+    setRegistrationStatus('pending');
+    setRegistrationError('');
     setLoading(true);
+    const slowTimer = setTimeout(() => setRegistrationStatus('slow'), 15000);
     try {
-      return await campusService.signUp(values);
+      const result = await campusService.signUp(values);
+      setRegistrationStatus('ready');
+      return result;
+    } catch (err) {
+      setRegistrationStatus('error');
+      setRegistrationError(err.message || 'Could not create your account.');
+      throw err;
     } finally {
+      clearTimeout(slowTimer);
       setLoading(false);
     }
   }
@@ -103,9 +115,10 @@ export function AuthProvider({ children }) {
   }
 
   const value = useMemo(() => ({
-    user, loading, authReady, signIn, signUp, verifyEmail, updateProfile, deleteProfile, signOut,
+    user, loading, authReady, registrationStatus, registrationError,
+    signIn, signUp, verifyEmail, updateProfile, deleteProfile, signOut,
     requestPasswordReset, resendVerificationCode, verifyResetCode, setNewPassword
-  }), [user, loading, authReady]);
+  }), [user, loading, authReady, registrationStatus, registrationError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

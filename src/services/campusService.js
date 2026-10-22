@@ -10,14 +10,27 @@ function requireBackend() {
 
 async function request(path, options = {}) {
   requireBackend();
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  const { timeoutMs, ...fetchOptions } = options;
+  const headers = { 'Content-Type': 'application/json', ...fetchOptions.headers };
 
-  const response = await fetch(API_URL + '/api' + path, {
-    ...options,
-    credentials: 'include',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined
-  });
+  let response;
+  try {
+    response = await fetch(API_URL + '/api' + path, {
+      ...fetchOptions,
+      credentials: 'include',
+      headers,
+      body: fetchOptions.body ? JSON.stringify(fetchOptions.body) : undefined,
+      signal: fetchOptions.signal || (timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined)
+    });
+  } catch (err) {
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      throw new Error('The server took too long to respond. Your account may have been created; try requesting a verification code again.');
+    }
+    if (err instanceof TypeError) {
+      throw new Error('Could not reach the MyCampus server. It may be waking up; please try again shortly.');
+    }
+    throw err;
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const error = new Error(data.message || 'The request could not be completed.');
@@ -41,7 +54,7 @@ export const campusService = {
   },
 
   async signUp(values) {
-    return request('/auth/register', { method: 'POST', body: values });
+    return request('/auth/register', { method: 'POST', body: values, timeoutMs: 90000 });
   },
 
   async currentUser() {

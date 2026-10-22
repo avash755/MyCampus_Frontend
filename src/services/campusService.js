@@ -1,5 +1,8 @@
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-const TOKEN_KEY = 'mycampus-token';
+const API_URL = (
+  import.meta.env.PROD
+    ? window.location.origin
+    : (import.meta.env.VITE_API_URL || '')
+).replace(/\/$/, '');
 
 function requireBackend() {
   if (!API_URL) throw new Error('The backend is not configured. Set VITE_API_URL in client/.env and restart Vite.');
@@ -8,8 +11,6 @@ function requireBackend() {
 async function request(path, options = {}) {
   requireBackend();
   const headers = { 'Content-Type': 'application/json', ...options.headers };
-  const token = options.token || localStorage.getItem(TOKEN_KEY);
-  if (token) headers.Authorization = 'Bearer ' + token;
 
   const response = await fetch(API_URL + '/api' + path, {
     ...options,
@@ -33,6 +34,10 @@ const toId = (value) => String(value?.id || value?._id || value || '');
 export const campusService = {
   async signIn({ email, password }) {
     return request('/auth/login', { method: 'POST', body: { email, password } });
+  },
+
+  async signOut() {
+    return request('/auth/logout', { method: 'POST' });
   },
 
   async signUp(values) {
@@ -110,4 +115,4 @@ export const campusService = {
   }
 };
 
-export { API_URL, TOKEN_KEY };
+export { API_URL };

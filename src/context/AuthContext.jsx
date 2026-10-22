@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { campusService, API_URL, TOKEN_KEY } from '../services/campusService';
+import { campusService, API_URL } from '../services/campusService';
 
 const AuthContext = createContext(null);
-const USER_KEY = 'mycampus-user';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -10,23 +9,17 @@ export function AuthProvider({ children }) {
   const [authReady, setAuthReady] = useState(false);
   const sessionRevision = useRef(0);
 
-  function saveSession(nextUser, token) {
+  function saveSession(nextUser) {
     sessionRevision.current += 1;
     setUser(nextUser);
     setAuthReady(true);
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-    else if (token === null) localStorage.removeItem(TOKEN_KEY);
     return nextUser;
   }
 
   useEffect(() => {
     let active = true;
     const revision = sessionRevision.current;
-    const token = localStorage.getItem(TOKEN_KEY);
-
-    if (!API_URL || !token) {
-      localStorage.removeItem(USER_KEY);
-      if (!API_URL) localStorage.removeItem(TOKEN_KEY);
+    if (!API_URL) {
       setAuthReady(true);
       return () => { active = false; };
     }
@@ -39,8 +32,6 @@ export function AuthProvider({ children }) {
       .catch(() => {
         if (!active || revision !== sessionRevision.current) return;
         setUser(null);
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(TOKEN_KEY);
       })
       .finally(() => {
         if (active && revision === sessionRevision.current) setAuthReady(true);
@@ -52,13 +43,11 @@ export function AuthProvider({ children }) {
   async function signIn(values) {
     sessionRevision.current += 1;
     setUser(null);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(TOKEN_KEY);
     setAuthReady(true);
     setLoading(true);
     try {
       const result = await campusService.signIn(values);
-      return saveSession(result.user, result.token);
+      return saveSession(result.user);
     } finally {
       setLoading(false);
     }
@@ -79,7 +68,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const result = await campusService.verifyEmail(email, code);
-      saveSession(result.user, result.token);
+      saveSession(result.user);
       return result;
     } finally {
       setLoading(false);
@@ -93,7 +82,7 @@ export function AuthProvider({ children }) {
 
   async function deleteProfile(password) {
     await campusService.deleteProfile(password);
-    signOut();
+    await signOut();
   }
 
   async function runAuthAction(action) {
@@ -107,11 +96,10 @@ export function AuthProvider({ children }) {
   function verifyResetCode(email, code) { return runAuthAction(() => campusService.verifyResetCode(email, code)); }
   function setNewPassword(password) { return runAuthAction(() => campusService.setNewPassword(password)); }
 
-  function signOut() {
+  async function signOut() {
     sessionRevision.current += 1;
     setUser(null);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(TOKEN_KEY);
+    try { await campusService.signOut(); } catch { /* Clear local UI even if the API is unavailable. */ }
   }
 
   const value = useMemo(() => ({

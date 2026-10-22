@@ -18,8 +18,10 @@ export default function LoginPage() {
     setError('');
     try {
       if (isSignup) {
-        await signUp(form);
-        navigate('/verify-email?email=' + encodeURIComponent(form.email));
+        const result = await signUp(form);
+        const params = new URLSearchParams({ email: form.email });
+        if (result.emailSent === false) params.set('emailSent', 'failed');
+        navigate('/verify-email?' + params.toString());
       } else {
         await signIn(form);
         navigate('/app');

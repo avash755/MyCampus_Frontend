@@ -59,7 +59,7 @@ export default function LandingPage() {
         <section className="landing-cta"><div className="cta-orbit cta-orbit-one" /><div className="cta-orbit cta-orbit-two" /><div className="cta-content"><span className="cta-star">✳</span><h2>There is a place<br />for you here.</h2><p>Take a look around your campus community.</p><button className="button button-light button-large" onClick={() => navigate('/preview')}>Take a look around <Icon name="arrow" size={17} /></button></div><div className="cta-aside"><span>MYCAMPUS</span><strong>Made for students.<br />Built for belonging.</strong><small>Campus life, together.</small></div></section>
       </main>
 
-      <footer className="landing-footer"><Link to="/" className="brand-lockup"><span className="brand-mark"><Icon name="compass" size={18} /></span><span className="brand-word">mycampus<span>.</span></span></Link><span>Made with care for campus life.</span><a href="#what-is-mycampus">Back to top ↑</a></footer>
+      <footer className="landing-footer"><Link to="/" className="brand-lockup"><span className="brand-mark"><Icon name="compass" size={18} /></span><span className="brand-word">mycampus<span>.</span></span></Link><span>Created by Emtayes Anwar Avash.</span><a href="#what-is-mycampus">Back to top ↑</a></footer>
     </div>
   );
 }

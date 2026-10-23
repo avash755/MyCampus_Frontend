@@ -8,7 +8,7 @@ import Modal from '../components/Modal';
 const getId = (value) => String(value?.id || value?._id || value || '');
 
 export default function ProfilePage() {
-  const { user, updateProfile, deleteProfile } = useAuth();
+  const { user, updateProfile} = useAuth();
   const { events, posts } = useWorkspace();
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
@@ -27,13 +27,6 @@ export default function ProfilePage() {
     finally { setSaving(false); }
   }
 
-  async function removeAccount(event) {
-    event.preventDefault(); setSaving(true); setError('');
-    try { await deleteProfile(password); navigate('/login', { replace: true }); }
-    catch (err) { setError(err.message || 'Could not delete your profile.'); }
-    finally { setSaving(false); }
-  }
-
   return (
     <div className="profile-page">
       <section className="page-intro"><div><span className="section-eyebrow">YOUR MYCAMPUS SPACE</span><h1>A little space <em>for you.</em></h1><p>Keep your campus details close and see what you have been part of.</p></div><button className="button button-primary" onClick={() => { setForm({ name: user?.name || '', department: user?.department || '', studentId: user?.studentId || '' }); setError(''); setEditOpen(true); }}><Icon name="file" size={16} /> Edit profile</button></section>
@@ -43,7 +36,7 @@ export default function ProfilePage() {
           <div className="profile-avatar-large" style={{ '--avatar-color': user?.avatarColor || '#6d65e8' }}>{user?.name?.slice(0, 1) || 'A'}</div>
           <div className="profile-card-body"><span className="profile-role-pill"><Icon name={user?.role === 'admin' ? 'shield' : 'sparkle'} size={14} />{user?.role === 'admin' ? 'Campus administrator' : 'Campus member'}</span><h2>{user?.name}</h2><p>{user?.department || 'Your campus community'}</p>
             <div className="profile-info-list"><div><span>Email</span><strong>{user?.email}</strong></div><div><span>Student ID</span><strong>{user?.studentId || 'Not added'}</strong></div><div><span>Department</span><strong>{user?.department || 'Not added'}</strong></div></div>
-            <div className="profile-account-actions"><Link to="/forgot-password">Change password</Link><button className="text-danger" onClick={() => { setPassword(''); setError(''); setDeleteOpen(true); }}>Delete my account</button></div>
+            <div className="profile-account-actions"><Link to="/forgot-password">Change password</Link></div>
           </div>
         </section>
         <section className="profile-activity">

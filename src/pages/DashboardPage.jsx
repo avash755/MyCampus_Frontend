@@ -17,7 +17,12 @@ function dayPart() {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { events, posts, loading } = useWorkspace();
-  const upcoming = useMemo(() => [...events].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 2), [events]);
+  const activeEvents = useMemo(() => events.filter((event) => {
+    const capacity = Number(event.capacity) || null;
+    const count = Number(event.attendeeCount ?? 0);
+    return new Date(event.startsAt || event.date) > new Date() && (!capacity || count < capacity);
+  }).sort((a, b) => new Date(a.date) - new Date(b.date)), [events]);
+  const upcoming = activeEvents.slice(0, 2);
   const featuredResource = posts.find((post) => post.category === 'resource');
   const notice = posts.find((post) => post.category === 'notice');
   const resourceCount = posts.filter((post) => post.category === 'resource').length;
@@ -41,10 +46,17 @@ export default function DashboardPage() {
         <span className="banner-index">01 / CAMPUS PULSE</span>
       </section>
 
+      <section className="dashboard-module-spotlight">
+        <span className="dashboard-module-spotlight-icon"><Icon name="book" size={21} /></span>
+        <div><span className="section-eyebrow">SKILL MODULES</span><strong>Find a session that helps you grow.</strong><p>See upcoming topics, start times, and how many students are joining.</p></div>
+        <Link to="/app/modules" className="button button-quiet">Explore modules <Icon name="arrow" size={15} /></Link>
+        {user?.role === 'admin' && <Link to="/app/modules/manage" className="button button-primary"><Icon name="calendar" size={16} /> Manage modules</Link>}
+      </section>
+
       <div className="dashboard-section-top"><div><span className="section-eyebrow">A QUICK SNAPSHOT</span><h2>Your campus, at a glance</h2></div><span className="updated-indicator"><i /> Updates as things happen</span></div>
       <section className="metric-grid">
-        <MetricCard label="Events coming up" value={events.length.toString().padStart(2, '0')} helper="Find something to join" icon="calendar" tone="lavender" />
-        <MetricCard label="Study resources" value={resourceCount.toString().padStart(2, '0')} helper="Shared by your community" icon="book" tone="peach" />
+        <MetricCard label="Events open to join" value={activeEvents.length.toString().padStart(2, '0')} helper="Registration is available" icon="calendar" tone="lavender" />
+        <MetricCard label="Study resources" value={resourceCount.toString().padStart(2, '0')} helper="Shared by your community" icon="book" tone="mint" />
         <MetricCard label="Opportunities" value={opportunityCount.toString().padStart(2, '0')} helper="Explore what is out there" icon="briefcase" tone="mint" />
         <MetricCard label="Lost & found" value={lostCount.toString().padStart(2, '0')} helper="Help something get home" icon="pin" tone="blue" />
       </section>
@@ -61,12 +73,12 @@ export default function DashboardPage() {
         <aside className="dashboard-side-column">
           <section className="notice-card">
             <div className="notice-card-top"><span className="notice-icon"><Icon name="bell" size={17} /></span><span className="notice-label">A CAMPUS NOTE</span><Link to="/app/notices" aria-label="All campus notices"><Icon name="arrow" size={16} /></Link></div>
-            {notice ? <><h3>{notice.title}</h3><p>{notice.body}</p><span className="notice-author">From {notice.author?.name || 'Student Affairs'}</span></> : <><h3>Make campus updates easier to find.</h3><p>Notices shared by your campus community will show up here.</p></>}
+            {notice ? <><h3>{notice.title}</h3><p>{notice.body}</p><span className="notice-author">From {notice.author?._id ? <Link className="notice-author-link" to={'/app/members/' + notice.author._id}>{notice.author?.name || 'Student Affairs'}</Link> : (notice.author?.name || 'Student Affairs')}</span></> : <><h3>Make campus updates easier to find.</h3><p>Notices shared by your campus community will show up here.</p></>}
           </section>
           <section className="quick-links-card">
             <div className="quick-links-heading"><span className="section-eyebrow">A GOOD PLACE TO START</span><h3>Find your next thing</h3></div>
             <Link to="/app/resources" className="quick-link"><span className="quick-link-icon quick-icon-violet"><Icon name="bookOpen" size={17} /></span><span><strong>Study resources</strong><small>Notes, guides & helpful links</small></span><Icon name="arrow" size={15} /></Link>
-            <Link to="/app/opportunities" className="quick-link"><span className="quick-link-icon quick-icon-peach"><Icon name="briefcase" size={17} /></span><span><strong>Opportunities</strong><small>Listings from organizations</small></span><Icon name="arrow" size={15} /></Link>
+            <Link to="/app/opportunities" className="quick-link"><span className="quick-link-icon quick-icon-mint"><Icon name="briefcase" size={17} /></span><span><strong>Opportunities</strong><small>Listings from organizations</small></span><Icon name="arrow" size={15} /></Link>
             <Link to="/app/lost-found" className="quick-link"><span className="quick-link-icon quick-icon-mint"><Icon name="pin" size={17} /></span><span><strong>Lost & found</strong><small>Help an item find its way</small></span><Icon name="arrow" size={15} /></Link>
           </section>
           <div className="gentle-reminder"><span>✳</span><p>A small hello can turn into a good campus day.</p></div>

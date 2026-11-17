@@ -51,8 +51,6 @@ async function request(path, options = {}) {
   return data;
 }
 
-const toId = (value) => String(value?.id || value?._id || value || '');
-
 export const campusService = {
   async signIn({ email, password }) {
     return request('/auth/login', { method: 'POST', body: { email, password } });
@@ -98,9 +96,46 @@ export const campusService = {
     return request('/auth/me', { method: 'DELETE', body: { password } });
   },
 
-  async loadWorkspace() {
-    const [eventData, postData] = await Promise.all([request('/events'), request('/posts')]);
-    return { events: eventData.events || [], posts: postData.posts || [] };
+  async loadWorkspace({ eventPage = 1, postPage = 1, myPostsPage = 1 } = {}) {
+    const [eventData, postData, myPostData] = await Promise.all([
+      request(`/events?page=${eventPage}&limit=30`),
+      request(`/posts?page=${postPage}&limit=30`),
+      request(`/posts/mine?page=${myPostsPage}&limit=30`)
+    ]);
+    return {
+      events: eventData.events || [], posts: postData.posts || [], myPosts: myPostData.posts || [],
+      eventPagination: eventData.pagination || { page: eventPage, hasMore: false },
+      postPagination: postData.pagination || { page: postPage, hasMore: false },
+      myPostsPagination: myPostData.pagination || { page: myPostsPage, hasMore: false }
+    };
+  },
+
+  async loadMemberProfile(id, page = 1) {
+    return request(`/members/${encodeURIComponent(id)}?page=${page}&limit=30`);
+  },
+
+  async loadEvents(page = 1) {
+    return request(`/events?page=${page}&limit=30`);
+  },
+
+  async loadPosts(page = 1) {
+    return request(`/posts?page=${page}&limit=30`);
+  },
+
+  async loadMyPosts(page = 1) {
+    return request(`/posts/mine?page=${page}&limit=30`);
+  },
+
+  async loadNotifications() {
+    return request('/notifications');
+  },
+
+  async markNotificationRead(id) {
+    return request('/notifications/' + id + '/read', { method: 'PATCH' });
+  },
+
+  async markAllNotificationsRead() {
+    return request('/notifications/read-all', { method: 'PATCH' });
   },
 
   async createEvent(values) {
@@ -111,10 +146,8 @@ export const campusService = {
     return request('/events/' + id, { method: 'DELETE' });
   },
 
-  async registerForEvent(event, user) {
-    const attendees = event.attendees || [];
-    const registered = attendees.some((person) => toId(person) === toId(user));
-    const action = registered ? 'leave' : 'join';
+  async registerForEvent(event) {
+    const action = event.isRegistered ? 'leave' : 'join';
     return request('/events/' + event._id + '/register', { method: 'POST', body: { action } });
   },
 
@@ -122,9 +155,8 @@ export const campusService = {
     return (await request('/posts', { method: 'POST', body: values })).post;
   },
 
-  async loadModeration(status = 'pending') {
-    const result = await request('/posts/moderation?status=' + encodeURIComponent(status));
-    return result.posts || [];
+  async loadModeration(status = 'pending', page = 1) {
+    return request(`/posts/moderation?status=${encodeURIComponent(status)}&page=${page}&limit=30`);
   },
 
   async moderatePost(id, action, featured) {
@@ -134,6 +166,45 @@ export const campusService = {
 
   async deletePost(id) {
     return request('/posts/' + id, { method: 'DELETE' });
+  },
+
+  async listModules() {
+    const result = await request('/modules');
+    return result.modules || [];
+  },
+  async getModule(id) {
+    return (await request('/modules/' + id)).module;
+  },
+  async listAdminModules() {
+    const result = await request('/modules/admin');
+    return { templates: result.templates || [], offerings: result.offerings || [] };
+  },
+  async createModule(values) {
+    return (await request('/modules', { method: 'POST', body: values })).module;
+  },
+  async updateModule(id, values) {
+    return (await request('/modules/' + id, { method: 'PATCH', body: values })).module;
+  },
+  async registerForModule(id) {
+    return request('/modules/' + id + '/registrations', { method: 'POST', body: {} });
+  },
+  async unregisterFromModule(id) {
+    return request('/modules/' + id + '/registrations', { method: 'DELETE' });
+  },
+  async listModuleRegistrations(id) {
+    const result = await request('/modules/' + id + '/registrations');
+    return result.registrations || [];
+  },
+  async reviewModuleRegistration(id, registrationId, status) {
+    return (await request('/modules/' + id + '/registrations/' + registrationId, { method: 'PATCH', body: { status } })).registration;
+  },
+  async listModuleMessages(id, after) {
+    const cursor = after ? `?after=${encodeURIComponent(after.createdAt)}&afterId=${encodeURIComponent(after.id)}` : '';
+    const result = await request('/modules/' + id + '/messages' + cursor);
+    return result.messages || [];
+  },
+  async sendModuleMessage(id, body) {
+    return (await request('/modules/' + id + '/messages', { method: 'POST', body: { body } })).message;
   }
 };
 

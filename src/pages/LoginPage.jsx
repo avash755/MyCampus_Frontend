@@ -38,7 +38,7 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <aside className="auth-story">
-        <Link to="/" className="brand-lockup auth-brand"><span className="brand-mark"><Icon name="compass" size={21} /></span><span className="brand-word">mycampus<span>.</span></span></Link>
+        <Link to="/" className="brand-lockup auth-brand"><span className="brand-mark"><Icon name="compass" size={20} /></span><span className="brand-word">mycampus<span>.</span></span></Link>
         <div className="auth-story-content">
           <span className="eyebrow auth-eyebrow"><span className="eyebrow-dot" /> YOUR CAMPUS, A LITTLE CLOSER</span>
           <h1>Good things<br />happen <em>together.</em></h1>

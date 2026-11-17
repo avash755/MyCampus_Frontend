@@ -7,6 +7,18 @@ function initialDate() {
   return new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 }
 
+function getStartDateTime(date, time) {
+  const match = String(time).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!match) return new Date(date + 'T12:00:00').toISOString();
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (match[3]) {
+    if (hours < 1 || hours > 12 || minutes > 59) return new Date(date + 'T12:00:00').toISOString();
+    hours = (hours % 12) + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+  } else if (hours > 23 || minutes > 59) return new Date(date + 'T12:00:00').toISOString();
+  return new Date(date + 'T' + String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':00').toISOString();
+}
+
 export default function EventForm({ onClose }) {
   const { addEvent } = useWorkspace();
   const [saving, setSaving] = useState(false);
@@ -26,7 +38,8 @@ export default function EventForm({ onClose }) {
       await addEvent({
         ...form,
         capacity: form.capacity === '' ? null : Number(form.capacity),
-        date: new Date(form.date + 'T12:00:00').toISOString()
+        date: new Date(form.date + 'T12:00:00').toISOString(),
+        startsAt: getStartDateTime(form.date, form.time)
       });
       onClose();
     } catch (err) {

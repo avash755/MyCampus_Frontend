@@ -33,7 +33,7 @@ const config = {
 };
 
 export default function PostsPage({ category }) {
-  const { posts } = useWorkspace();
+  const { posts, myPosts, postHasMore, myPostsHasMore, loadingMorePosts, loadingMoreMyPosts, loadMorePosts, loadMoreMyPosts } = useWorkspace();
   const { user } = useAuth();
   const canPost = category !== 'notice' || user?.role === 'admin';
   const [createOpen, setCreateOpen] = useState(false);
@@ -43,13 +43,16 @@ export default function PostsPage({ category }) {
     .filter((post) => post.category === category)
     .filter((post) => (post.title + ' ' + post.body + ' ' + (post.tags || []).join(' ')).toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))), [posts, category, query]);
+  const mySubmissions = useMemo(() => myPosts.filter((post) => post.category === category), [myPosts, category]);
 
   return (
     <div className="listing-page">
       <section className={'page-intro post-intro intro-' + category}><div><span className="section-eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><p>{page.description}</p></div>{canPost && <button className="button button-primary" onClick={() => setCreateOpen(true)}><Icon name="plus" size={17} /> {page.action}</button>}</section>
       {category === 'opportunity' && <div className="opportunity-note"><Icon name="shield" size={17} /><span><strong>A note on opportunity listings</strong> MyCampus shares listings and links. Students should verify details and apply directly with each organization.</span></div>}
+      {mySubmissions.length > 0 && <section className="my-submissions-panel" aria-label="Your submissions"><div className="my-submissions-heading"><div><span className="section-eyebrow">VISIBLE TO YOU</span><h2>Your submissions</h2></div><span>{mySubmissions.length} {mySubmissions.length === 1 ? 'post' : 'posts'}</span></div><div className="my-submissions-list">{mySubmissions.map((post) => <article className="my-submission-row" key={post._id}><div className="my-submission-copy"><strong>{post.title}</strong><span>Submitted {new Date(post.createdAt).toLocaleDateString()}</span></div><span className={'moderation-status status-' + (post.status || 'approved')}>{post.status || 'approved'}</span></article>)}</div>{myPostsHasMore && <div className="load-more-row"><button className="button button-quiet" disabled={loadingMoreMyPosts} onClick={loadMoreMyPosts}>{loadingMoreMyPosts ? 'Loading…' : 'Load more submissions'}</button></div>}<p className="my-submissions-hint">Study resources and lost &amp; found posts appear immediately. Other post types may need admin review.</p></section>}
       <div className="list-toolbar post-list-toolbar"><div className="list-count"><strong>{visible.length.toString().padStart(2, '0')}</strong> {category === 'resource' ? 'resources shared' : category === 'lost-found' ? 'items in the board' : category === 'opportunity' ? 'listings to explore' : 'campus updates'}</div><label className="inline-search"><Icon name="search" size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search this board" /></label></div>
       {visible.length ? <div className="posts-grid">{visible.map((post) => <PostCard key={post._id} post={post} />)}</div> : <div className="empty-panel"><span className="empty-icon"><Icon name={category === 'opportunity' ? 'briefcase' : category === 'lost-found' ? 'pin' : category === 'notice' ? 'bell' : 'book'} /></span><h3>Nothing here yet</h3><p>{page.empty}</p>{canPost && <button className="button button-primary" onClick={() => setCreateOpen(true)}><Icon name="plus" size={16} /> {page.action}</button>}</div>}
+      {postHasMore && <div className="load-more-row"><button className="button button-quiet" disabled={loadingMorePosts} onClick={loadMorePosts}>{loadingMorePosts ? 'Loading…' : 'Load more posts'}</button></div>}
       {createOpen && <PostForm category={category} onClose={() => setCreateOpen(false)} />}
     </div>
   );

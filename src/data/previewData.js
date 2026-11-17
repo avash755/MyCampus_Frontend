@@ -1,7 +1,14 @@
 // Illustrative content for the public preview. This data never goes to the API.
+const relativeDate = (days, hour = 10) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(hour, 0, 0, 0);
+  return date.toISOString();
+};
+
 export const previewStats = [
   { label: 'Events coming up', value: '08', helper: 'Find something to join', icon: 'calendar', tone: 'lavender' },
-  { label: 'Study resources', value: '24', helper: 'Shared by students', icon: 'book', tone: 'peach' },
+  { label: 'Study resources', value: '24', helper: 'Shared by students', icon: 'book', tone: 'mint' },
   { label: 'Opportunities', value: '12', helper: 'Explore what is out there', icon: 'briefcase', tone: 'mint' },
   { label: 'Lost & found', value: '03', helper: 'Help an item get home', icon: 'pin', tone: 'blue' }
 ];
@@ -11,7 +18,7 @@ export const previewEvents = [
     _id: 'preview-event-design-workshop',
     title: 'Designing for a better campus',
     description: 'Share ideas and sketch small changes that could make student life better.',
-    date: '2026-10-27T14:30:00',
+    date: relativeDate(2, 14),
     time: '2:30 PM',
     category: 'Workshop',
     location: 'Innovation Lab',
@@ -24,7 +31,7 @@ export const previewEvents = [
     _id: 'preview-event-fall-social',
     title: 'Fall welcome social',
     description: 'Meet classmates, enjoy music, and get to know a few campus clubs.',
-    date: '2026-10-30T17:00:00',
+    date: relativeDate(7, 17),
     time: '5:00 PM',
     category: 'Social',
     location: 'Central Green',
@@ -42,7 +49,7 @@ export const previewPosts = [
     title: 'Midterm study guide: Data Structures',
     body: 'A student-made review sheet covering trees, graphs, and the practice problems that helped most.',
     tags: ['Computer Science', 'Study guide'],
-    createdAt: '2026-10-18T10:00:00',
+    createdAt: relativeDate(-2),
     author: { name: 'Mina Rahman', department: 'Computer Science' }
   },
   {
@@ -51,17 +58,18 @@ export const previewPosts = [
     title: 'Open source student fellowship',
     body: 'An eight-week guided project for students who want to build experience contributing to public software.',
     tags: ['Remote', 'Beginner friendly'],
-    deadline: '2026-11-15T00:00:00',
-    createdAt: '2026-10-16T12:00:00',
+    deadline: relativeDate(14, 23),
+    createdAt: relativeDate(-3, 12),
     author: { name: 'Campus Careers', department: 'Career Center' }
   },
   {
     _id: 'preview-lost-found-notebook',
     category: 'lost-found',
+    itemStatus: 'found',
     title: 'Blue notebook found near the library',
     body: 'Found after the afternoon classes. The owner can get in touch to identify and collect it.',
     location: 'Central Library, second floor',
-    createdAt: '2026-10-19T09:00:00',
+    createdAt: relativeDate(-1, 9),
     author: { name: 'Ari Hasan', department: 'Campus community' }
   }
 ];

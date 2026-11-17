@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import Icon from './Icon';
-import { API_URL } from '../services/campusService';
+
 
 const tones = ['violet', 'peach', 'mint', 'blue'];
 const getId = (value) => String(value?.id || value?._id || value || '');
@@ -20,16 +21,20 @@ export default function EventCard({ event, compact = false }) {
   const { user } = useAuth();
   const { registerEvent, removeEvent } = useWorkspace();
   const [busy, setBusy] = useState(false);
+  const [organizerImageFailed, setOrganizerImageFailed] = useState(false);
   const [error, setError] = useState('');
-  const attendees = event.attendees || [];
-  const registered = attendees.some((person) => getId(person) === getId(user));
+  const registered = Boolean(event.isRegistered);
   const capacity = Number(event.capacity) || null;
-  const attendeeCount = Number(event.attendeeCount ?? attendees.length);
+  const attendeeCount = Number(event.attendeeCount ?? 0);
   const full = Boolean(capacity && attendeeCount >= capacity);
-  const past = new Date(event.date) <= new Date();
+  const past = new Date(event.startsAt || event.date) <= new Date();
+  const active = !past && !full;
   const canManage = user?.role === 'admin' || getId(event.organizer) === getId(user);
   const parts = getParts(event.date);
   const tone = tones.includes(event.coverTone) ? event.coverTone : 'violet';
+  const organizerId = getId(event.organizer);
+  const organizerName = event.organizer?.name || 'Campus community';
+  const organizerInitial = organizerName.trim().slice(0, 1).toUpperCase() || 'C';
 
   async function toggleRegistration() {
     setBusy(true); setError('');
@@ -46,11 +51,25 @@ export default function EventCard({ event, compact = false }) {
     finally { setBusy(false); }
   }
 
+  const organizerContent = (
+    <>
+      <span className="mini-avatar">
+        {event.organizer?.profileImage && !organizerImageFailed
+          ? <img src={event.organizer.profileImage} alt="" onError={() => setOrganizerImageFailed(true)} />
+          : organizerInitial}
+      </span>
+      <span>{organizerName}</span>
+    </>
+  );
+
   return (
     <article className={'event-card ' + (compact ? 'event-card-compact' : '')}>
       <div className={'event-art event-art-' + tone}>
         <div className="event-art-orbit event-art-orbit-one" /><div className="event-art-orbit event-art-orbit-two" />
-        <span className="event-art-category">{event.category || 'Community'}</span>
+        <div className="event-art-labels">
+          <span className="event-art-category">{event.category || 'Community'}</span>
+          <span className={'event-status-badge ' + (active ? 'is-active' : 'is-closed')}>{compact ? (active ? 'Open' : 'Closed') : (active ? 'Registration open' : 'Closed')}</span>
+        </div>
         <div className="event-art-date"><strong>{parts.day}</strong><span>{parts.month}</span></div>
         <div className="event-art-spark"><Icon name="sparkle" size={23} /></div>
       </div>
@@ -62,11 +81,15 @@ export default function EventCard({ event, compact = false }) {
         {full && !registered && <p className="event-full-note">This event is full.</p>}
         {error && <p className="form-error event-inline-error">{error}</p>}
         <div className="event-card-footer">
-          <div className="event-organizer"><span className="mini-avatar">{(event.organizer?.name || 'C').slice(0, 1)}</span><span>{event.organizer?.name || 'Campus community'}</span></div>
+          <div className="event-organizer">
+            {organizerId
+              ? <Link className="event-organizer-link" to={'/app/members/' + organizerId} aria-label={'View ' + organizerName + ' profile'}>{organizerContent}</Link>
+              : organizerContent}
+          </div>
           <div className="event-card-actions">
             {canManage && <button className="event-remove-action" onClick={remove} disabled={busy}>Remove</button>}
-            <button className={'button ' + (registered ? 'button-attending' : 'button-primary') + ' button-small'} onClick={toggleRegistration} disabled={busy || (!registered && past) || (!registered && full && !API_URL)}>
-              {busy ? 'Saving…' : registered ? <><Icon name="check" size={15} /> Going</> : past ? 'Registration closed' : full ? (API_URL ? 'Check availability' : 'Event full') : 'Join event'}
+            <button className={'button ' + (registered ? 'button-attending' : 'button-primary') + ' button-small'} onClick={toggleRegistration} disabled={busy || (!registered && !active)}>
+              {busy ? 'Saving…' : registered ? <><Icon name="check" size={15} /> Going</> : past ? 'Registration closed' : full ? 'Event full' : 'Join event'}
             </button>
           </div>
         </div>

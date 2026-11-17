@@ -5,7 +5,7 @@ import Icon from './Icon';
 
 const categoryCopy = {
   resource: ['Share a study resource', 'Help someone else find a useful class resource.'],
-  'lost-found': ['Post to lost & found', 'A clear description helps an item find its way home.'],
+  'lost-found': ['Post to lost & found', 'Choose whether you lost or found the item, then add its last known location.'],
   opportunity: ['Share an opportunity', 'Add the source link so students can confirm details and apply directly.'],
   notice: ['Post a campus notice', 'Share a useful update with your campus community.']
 };
@@ -15,7 +15,7 @@ export default function PostForm({ category, onClose }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(null);
-  const [form, setForm] = useState({ title: '', body: '', category, department: '', tags: '', link: '', location: '', contact: '', deadline: '' });
+  const [form, setForm] = useState({ title: '', body: '', category, itemStatus: 'lost', department: '', tags: '', link: '', location: '', contact: '', deadline: '' });
   const copy = categoryCopy[category] || categoryCopy.resource;
 
   function update(key, value) { setForm((current) => ({ ...current, [key]: value })); }
@@ -31,7 +31,7 @@ export default function PostForm({ category, onClose }) {
     };
     try {
       const post = await addPost(payload);
-      if (post.status === 'pending') setSubmitted('Your post is in the moderation queue. It will appear on the board after an administrator approves it.');
+      if (post.status === 'pending') setSubmitted('Your post is in the moderation queue. You can track it under Your submissions, and we will notify you when an administrator approves or rejects it.');
       else setSubmitted('Your post has been published.');
     } catch (err) {
       setError(err.message || 'Could not create this post.');
@@ -43,7 +43,13 @@ export default function PostForm({ category, onClose }) {
   return (
     <Modal title={submitted ? 'Thanks for sharing' : copy[0]} subtitle={submitted ? '' : copy[1]} onClose={onClose}>
       {submitted ? <div className="post-submitted"><span className="empty-icon"><Icon name="check" /></span><p>{submitted}</p><button className="button button-primary" onClick={onClose}>Done</button></div> : <form className="form-stack" onSubmit={submit}>
-        <label className="field-label">Title<input required maxLength="140" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="Give your post a clear title" /></label>
+        {category === 'lost-found' && <label className="field-label">Are you reporting an item you lost or found?
+          <select required value={form.itemStatus} onChange={(event) => update('itemStatus', event.target.value)}>
+            <option value="lost">I lost an item</option>
+            <option value="found">I found an item</option>
+          </select>
+        </label>}
+        <label className="field-label">Title<input required maxLength="140" value={form.title} onChange={(event) => update('title', event.target.value)} placeholder={category === 'lost-found' ? form.itemStatus === 'lost' ? 'e.g. Lost black wallet' : 'e.g. Found blue umbrella' : 'Give your post a clear title'} /></label>
         <label className="field-label">Description<textarea required rows="4" maxLength="3000" value={form.body} onChange={(event) => update('body', event.target.value)} placeholder="Add the details people need to know" /></label>
         {category !== 'lost-found' && <label className="field-label">Department or audience<input value={form.department} onChange={(event) => update('department', event.target.value)} placeholder="e.g. All departments" /></label>}
         {category === 'resource' && <>
@@ -57,8 +63,8 @@ export default function PostForm({ category, onClose }) {
           <label className="field-label">Topics <span className="field-hint">(separate with commas)</span><input value={form.tags} onChange={(event) => update('tags', event.target.value)} placeholder="Internship, Design" /></label>
         </>}
         {category === 'lost-found' && <div className="form-grid">
-          <label className="field-label">Where was it found?<input value={form.location} onChange={(event) => update('location', event.target.value)} placeholder="Library, building, room…" /></label>
-          <label className="field-label">How can they reach you?<input value={form.contact} onChange={(event) => update('contact', event.target.value)} placeholder="Email or campus contact" /></label>
+          <label className="field-label">{form.itemStatus === 'lost' ? 'Where did you last see it?' : 'Where did you find it?'}<input required value={form.location} onChange={(event) => update('location', event.target.value)} placeholder={form.itemStatus === 'lost' ? 'Last known building or room…' : 'Building, room, or campus area…'} /></label>
+          <label className="field-label">How can students reach you?<input value={form.contact} onChange={(event) => update('contact', event.target.value)} placeholder="Email or campus contact" /></label>
         </div>}
         {category === 'notice' && <label className="field-label">Link <span className="field-hint">(optional)</span><input type="url" value={form.link} onChange={(event) => update('link', event.target.value)} placeholder="https://" /></label>}
         {error && <p className="form-error">{error}</p>}
@@ -67,3 +73,4 @@ export default function PostForm({ category, onClose }) {
     </Modal>
   );
 }
+

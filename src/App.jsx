@@ -13,6 +13,10 @@ import EventsPage from './pages/EventsPage';
 import PostsPage from './pages/PostsPage';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
+import MemberProfilePage from './pages/MemberProfilePage';
+import ModulesPage from './pages/ModulesPage';
+import ModuleDetailPage from './pages/ModuleDetailPage';
+import ModuleAdminPage from './pages/ModuleAdminPage';
 
 function ProtectedApp() {
   const { user, authReady } = useAuth();
@@ -39,6 +43,9 @@ export default function App() {
       <Route path="/app" element={<ProtectedApp />}>
         <Route index element={<DashboardPage />} />
         <Route path="events" element={<EventsPage />} />
+        <Route path="modules" element={<ModulesPage />} />
+        <Route path="modules/manage" element={<AdminRoute><ModuleAdminPage /></AdminRoute>} />
+        <Route path="modules/:id" element={<ModuleDetailPage />} />
         <Route path="resources" element={<PostsPage category="resource" />} />
         <Route path="lost-found" element={<PostsPage category="lost-found" />} />
         <Route path="opportunities" element={<PostsPage category="opportunity" />} />
@@ -46,8 +53,11 @@ export default function App() {
         <Route path="moderation" element={<AdminRoute><ModerationPage /></AdminRoute>} />
         <Route path="search" element={<SearchPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="members/:memberId" element={<MemberProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+
+

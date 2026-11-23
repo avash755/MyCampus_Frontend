@@ -151,6 +151,16 @@ export const campusService = {
     return request('/events/' + event._id + '/register', { method: 'POST', body: { action } });
   },
 
+  async listEventMessages(id, after) {
+    const cursor = after ? `?after=${encodeURIComponent(after.createdAt)}&afterId=${encodeURIComponent(after.id)}` : '';
+    const result = await request('/events/' + id + '/messages' + cursor);
+    return result.messages || [];
+  },
+
+  async sendEventMessage(id, body) {
+    return (await request('/events/' + id + '/messages', { method: 'POST', body: { body } })).message;
+  },
+
   async createPost(values) {
     return (await request('/posts', { method: 'POST', body: values })).post;
   },

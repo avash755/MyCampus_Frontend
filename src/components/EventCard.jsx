@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import Icon from './Icon';
-import EventChat from './EventChat';
-import Modal from './Modal';
 
 
 const tones = ['violet', 'peach', 'mint', 'blue'];
@@ -25,7 +23,6 @@ export default function EventCard({ event, compact = false }) {
   const [busy, setBusy] = useState(false);
   const [organizerImageFailed, setOrganizerImageFailed] = useState(false);
   const [error, setError] = useState('');
-  const [discussionOpen, setDiscussionOpen] = useState(false);
   const registered = Boolean(event.isRegistered);
   const capacity = Number(event.capacity) || null;
   const attendeeCount = Number(event.attendeeCount ?? 0);
@@ -92,7 +89,9 @@ export default function EventCard({ event, compact = false }) {
           </div>
           <div className="event-card-actions">
             {canManage && <button className="event-remove-action" onClick={remove} disabled={busy}>Remove</button>}
-            {!compact && <button className="event-discuss-action" type="button" onClick={() => setDiscussionOpen(true)}><Icon name="users" size={15} /> Discuss</button>}
+            <Link className="event-discuss-action" to={'/app/events/' + event._id} aria-label={'Open group chat for ' + event.title}>
+              <Icon name="users" size={15} />{compact ? 'Chat' : 'Group chat'}
+            </Link>
             <button className={'button ' + (registered ? 'button-attending' : 'button-primary') + ' button-small'} onClick={toggleRegistration} disabled={busy || (!registered && !active)}>
               {busy ? 'Saving…' : registered ? <><Icon name="check" size={15} /> Going</> : past ? 'Registration closed' : full ? 'Event full' : 'Join event'}
             </button>
@@ -100,7 +99,6 @@ export default function EventCard({ event, compact = false }) {
         </div>
       </div>
     </article>
-    {discussionOpen && <Modal title="Event discussion" subtitle={event.title} onClose={() => setDiscussionOpen(false)}><p className="event-chat-visibility">Messages are visible to all signed-in campus members.</p><EventChat eventId={event._id} /></Modal>}
     </>
   );
 }

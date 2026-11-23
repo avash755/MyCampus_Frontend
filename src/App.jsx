@@ -10,6 +10,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import ModerationPage from './pages/ModerationPage';
 import DashboardPage from './pages/DashboardPage';
 import EventsPage from './pages/EventsPage';
+import EventDetailPage from './pages/EventDetailPage';
 import PostsPage from './pages/PostsPage';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
@@ -43,6 +44,7 @@ export default function App() {
       <Route path="/app" element={<ProtectedApp />}>
         <Route index element={<DashboardPage />} />
         <Route path="events" element={<EventsPage />} />
+        <Route path="events/:id" element={<EventDetailPage />} />
         <Route path="modules" element={<ModulesPage />} />
         <Route path="modules/manage" element={<AdminRoute><ModuleAdminPage /></AdminRoute>} />
         <Route path="modules/:id" element={<ModuleDetailPage />} />

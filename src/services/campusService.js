@@ -42,7 +42,11 @@ async function request(path, options = {}) {
     throw new Error('This Vercel deployment is not forwarding /api requests to MyCampus. Check that the MyCampus client is deployed and its /api rewrite is active.');
   }
   if (!response.ok) {
-    const error = new Error(data.message || 'The MyCampus API returned an error. Please try again.');
+    const routeMissing = response.status === 404 && data.message === 'That API route was not found.';
+    const message = routeMissing
+      ? 'Event chat is not available on this API server yet. Update the MyCampus backend and confirm this client is connected to it.'
+      : data.message || 'The MyCampus API returned an error. Please try again.';
+    const error = new Error(message);
     error.code = data.code;
     error.status = response.status;
     error.data = data;
@@ -140,6 +144,10 @@ export const campusService = {
 
   async createEvent(values) {
     return (await request('/events', { method: 'POST', body: values })).event;
+  },
+
+  async getEvent(id) {
+    return (await request('/events/' + id)).event;
   },
 
   async deleteEvent(id) {
